@@ -90,7 +90,11 @@ class LS_SegmentAnythingUltraV3:
             _image = tensor2pil(i).convert('RGBA')
             boxes = groundingdino_predict(DINO_MODEL, _image, prompt, threshold)
             if boxes.shape[0] == 0:
-                break
+                empty_image = pil2tensor(_image)
+                empty_mask = torch.zeros((1, height, width), dtype=torch.uint8, device="cpu")
+                ret_images.append(empty_image)
+                ret_masks.append(empty_mask)
+                continue
             (_, _mask) = sam_segment(SAM_MODEL, _image, boxes)
             _mask = _mask[0]
             detail_range = detail_erode + detail_dilate
