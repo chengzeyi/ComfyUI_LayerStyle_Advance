@@ -148,10 +148,10 @@ def tensor2cv2(image:torch.Tensor) -> np.array:
 
 def image2mask(image:Image) -> torch.Tensor:
     if image.mode == 'L':
-        return torch.tensor([pil2tensor(image)[0, :, :].tolist()])
+        return pil2tensor(image)
     else:
         image = image.convert('RGB').split()[0]
-        return torch.tensor([pil2tensor(image)[0, :, :].tolist()])
+        return pil2tensor(image)
 
 def mask2image(mask:torch.Tensor)  -> Image:
     masks = tensor2np(mask)
