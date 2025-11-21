@@ -91,6 +91,7 @@ class LS_SegmentAnythingUltraV3:
             boxes = groundingdino_predict(DINO_MODEL, _image, prompt, threshold)
             if boxes.shape[0] == 0:
                 empty_image = pil2tensor(_image)
+                _, height, width, _ = image.size()
                 empty_mask = torch.zeros((1, height, width), dtype=torch.uint8, device="cpu")
                 ret_images.append(empty_image)
                 ret_masks.append(empty_mask)
