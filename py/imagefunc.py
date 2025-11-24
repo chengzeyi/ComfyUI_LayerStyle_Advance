@@ -1591,8 +1591,9 @@ def generate_VITMatte(image:Image, trimap:Image, local_files_only:bool=False, de
         inputs = {k: v.to(device) for k, v in inputs.items()}
         predictions = vit_matte_model.model(**inputs).alphas
     if torch.cuda.is_available():
-        torch.cuda.empty_cache()
-        torch.cuda.ipc_collect()
+        # torch.cuda.empty_cache()
+        # torch.cuda.ipc_collect()
+        pass
     mask = tensor2pil(predictions).convert('L')
     mask = mask.crop(
         (0, 0, image.width, image.height))  # remove padding that the prediction appends (works in 32px tiles)
@@ -2121,6 +2122,7 @@ def find_best_match_by_similarity(target, candidates):
 
 
 def clear_memory():
+    return
     import gc
     # Cleanup
     gc.collect()
