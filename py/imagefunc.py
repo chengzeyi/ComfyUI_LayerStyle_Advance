@@ -24,7 +24,7 @@ import random
 import time
 from pathlib import Path
 from tqdm import tqdm
-from functools import lru_cache
+from functools import lru_cache, cache
 from typing import Union, List
 from PIL import Image, ImageFilter, ImageChops, ImageDraw, ImageOps, ImageEnhance, ImageFont
 from skimage import img_as_float, img_as_ubyte
@@ -1548,6 +1548,7 @@ class VITMatteModel:
         self.model = model
         self.processor = processor
 
+@functools.cache
 def load_VITMatte_model(model_name:str, local_files_only:bool=False) -> object:
     model_name = "vitmatte"
     model_repo = "hustvl/vitmatte-small-composition-1k"
