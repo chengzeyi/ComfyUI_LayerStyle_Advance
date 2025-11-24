@@ -1548,7 +1548,7 @@ class VITMatteModel:
         self.model = model
         self.processor = processor
 
-@functools.cache
+@cache
 def load_VITMatte_model(model_name:str, local_files_only:bool=False) -> object:
     model_name = "vitmatte"
     model_repo = "hustvl/vitmatte-small-composition-1k"
