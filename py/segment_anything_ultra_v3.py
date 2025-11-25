@@ -81,19 +81,15 @@ class LS_SegmentAnythingUltraV3:
         SAM_MODEL = sam_models["SAM_MODEL"]
         DINO_MODEL = sam_models["DINO_MODEL"]
 
-        ret_images = []
         ret_masks = []
 
         for i in image:
             i = torch.unsqueeze(i, 0)
-            i = pil2tensor(tensor2pil(i).convert('RGB'))
-            _image = tensor2pil(i).convert('RGBA')
+            _image = tensor2pil(i).convert('RGB')
             boxes = groundingdino_predict(DINO_MODEL, _image, prompt, threshold)
             if boxes.shape[0] == 0:
-                empty_image = pil2tensor(_image)
                 _, height, width, _ = image.size()
                 empty_mask = torch.zeros((1, height, width), dtype=torch.float32, device="cpu")
-                ret_images.append(empty_image)
                 ret_masks.append(empty_mask)
                 continue
             (_, _mask) = sam_segment(SAM_MODEL, _image, boxes)
@@ -102,27 +98,21 @@ class LS_SegmentAnythingUltraV3:
             if process_detail:
                 if detail_method == 'GuidedFilter':
                     _mask = guided_filter_alpha(i, _mask, detail_range // 6 + 1)
-                    _mask = tensor2pil(histogram_remap(_mask, black_point, white_point))
+                    _mask = histogram_remap(_mask, black_point, white_point)[..., 0]
                 elif detail_method == 'PyMatting':
-                    _mask = tensor2pil(mask_edge_detail(i, _mask, detail_range // 8 + 1, black_point, white_point))
+                    _mask = mask_edge_detail(i, _mask, detail_range // 8 + 1, black_point, white_point)[..., 0]
                 else:
                     _trimap = generate_VITMatte_trimap(_mask, detail_erode, detail_dilate)
                     _mask = generate_VITMatte(_image, _trimap, local_files_only=local_files_only, device=device, max_megapixels=max_megapixels)
-                    _mask = tensor2pil(histogram_remap(pil2tensor(_mask), black_point, white_point))
+                    _mask = histogram_remap(pil2tensor(_mask), black_point, white_point)
             else:
-                _mask = mask2image(_mask)
-            _image = RGB2RGBA(tensor2pil(i).convert('RGB'), _mask.convert('L'))
+                _mask = _mask
 
-            ret_images.append(pil2tensor(_image))
-            ret_masks.append(image2mask(_mask))
-        if len(ret_masks) == 0:
-            _, height, width, _ = image.size()
-            empty_mask = torch.zeros((1, height, width), dtype=torch.uint8, device="cpu")
-            return (empty_mask, empty_mask)
+            ret_masks.append(_mask)
 
 
         log(f"{self.NODE_NAME} Processed {len(ret_masks)} image(s).", message_type='finish')
-        return (torch.cat(ret_images, dim=0), torch.cat(ret_masks, dim=0),)
+        return (None, torch.cat(ret_masks, dim=0),)
 
 NODE_CLASS_MAPPINGS = {
     "LayerMask: SegmentAnythingUltra V3": LS_SegmentAnythingUltraV3,

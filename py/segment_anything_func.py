@@ -165,8 +165,8 @@ def groundingdino_predict(
         logits = outputs["pred_logits"].sigmoid()[0]  # (nq, 256)
         boxes = outputs["pred_boxes"][0]  # (nq, 4)
         # filter output
-        logits_filt = logits.clone()
-        boxes_filt = boxes.clone()
+        logits_filt = logits
+        boxes_filt = boxes
         filt_mask = logits_filt.max(dim=1)[0] > box_threshold
         logits_filt = logits_filt[filt_mask]  # num_filt, 256
         boxes_filt = boxes_filt[filt_mask]  # num_filt, 4
@@ -188,7 +188,7 @@ def create_tensor_output(image_np, masks, boxes_filt):
     boxes_filt = boxes_filt.numpy().astype(int) if boxes_filt is not None else None
     for mask in masks:
         image_np_copy = copy.deepcopy(image_np)
-        image_np_copy[~np.any(mask, axis=0)] = np.array([0, 0, 0, 0])
+        image_np_copy[~np.any(mask, axis=0)] = 0
         output_image, output_mask = split_image_mask(
             Image.fromarray(image_np_copy))
         output_masks.append(output_mask)
@@ -218,7 +218,7 @@ def sam_segment(
     if hasattr(sam_model, 'model_name') and 'hq' in sam_model.model_name:
         sam_is_hq = True
     predictor = SamPredictorHQ(sam_model, sam_is_hq)
-    image_np = np.array(image)
+    image_np = np.asarray(image)
     image_np_rgb = image_np[..., :3]
     predictor.set_image(image_np_rgb)
     transformed_boxes = predictor.transform.apply_boxes_torch(
@@ -229,5 +229,6 @@ def sam_segment(
         point_labels=None,
         boxes=transformed_boxes.to(sam_device),
         multimask_output=False)
-    masks = masks.permute(1, 0, 2, 3).cpu().numpy()
-    return create_tensor_output(image_np, masks, boxes)
+    masks = masks.permute(1, 0, 2, 3).contiguous().cpu()
+    # return create_tensor_output(image_np, masks, boxes)
+    return (None, masks[:, :1])

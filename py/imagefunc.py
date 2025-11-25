@@ -1669,7 +1669,7 @@ def mask_fix(images:torch.Tensor, radius:int, fill_holes:int, white_threshold:fl
 def histogram_remap(image:torch.Tensor, blackpoint:float, whitepoint:float) -> torch.Tensor:
     bp = min(blackpoint, whitepoint - 0.001)
     scale = 1 / (whitepoint - bp)
-    i_dup = copy.deepcopy(image.cpu().numpy())
+    i_dup = image.cpu().numpy()
     i_dup = np.clip((i_dup - bp) * scale, 0.0, 1.0)
     return torch.from_numpy(i_dup)
 
