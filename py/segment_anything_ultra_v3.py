@@ -108,6 +108,8 @@ class LS_SegmentAnythingUltraV3:
             else:
                 _mask = _mask
 
+            _mask = _mask.to(torch.float32)
+
             ret_masks.append(_mask)
 
 
